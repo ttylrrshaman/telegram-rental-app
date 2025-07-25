@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkinRent - Аренда игровых скинов</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e6e6e6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #4a4a8a;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo h1 {
+            font-size: 28px;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 700;
+        }
+        
+        .logo-icon {
+            font-size: 32px;
+            color: #ff7e5f;
+        }
+        
+        nav {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #e6e6e6;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-btn:hover {
+            background: rgba(255, 126, 95, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .nav-btn i {
+            font-size: 18px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 25px;
+        }
+        
+        .profile-section {
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid #4a4a8a;
+        }
+        
+        .user-info {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            color: white;
+        }
+        
+        .username {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .user-status {
+            color: #4da6ff;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .balance-card {
+            background: linear-gradient(135deg, #2c3e50, #4a4a8a);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .balance-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 18px;
+            color: #a0a0d0;
+        }
+        
+        .balance-amount {
+            font-size: 32px;
+            font-weight: 700;
+            text-align: center;
+            margin: 15px 0;
+            color: #feb47b;
+        }
+        
+        .balance-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .balance-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .balance-btn:hover {
+            background: rgba(255, 126, 95, 0.3);
+        }
+        
+        .transfer-section {
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #4a4a8a;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #feb47b;
+        }
+        
+        .transfer-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 1px solid #4a4a8a;
+            background: rgba(26, 26, 46, 0.5);
+            color: white;
+            font-size: 16px;
+        }
+        
+        .transfer-form input::placeholder {
+            color: #a0a0d0;
+        }
+        
+        .transfer-form button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .transfer-form button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4);
+        }
+        
+        .catalog-section {
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border: 1px solid #4a4a8a;
+        }
+        
+        .catalog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .catalog-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .search-bar {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-bar input {
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1px solid #4a4a8a;
+            background: rgba(26, 26, 46, 0.5);
+            color: white;
+            width: 250px;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #4a4a8a;
+            color: #e6e6e6;
+            padding: 8px 15px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn.active {
+            background: rgba(255, 126, 95, 0.3);
+            border-color: #ff7e5f;
+        }
+        
+        .skins-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .skin-card {
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid #4a4a8a;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .skin-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            border-color: #ff7e5f;
+        }
+        
+        .skin-image {
+            height: 180px;
+            background: linear-gradient(135deg, #2c3e50, #4a4a8a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+        }
+        
+        .skin-info {
+            padding: 15px;
+        }
+        
+        .skin-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .skin-desc {
+            color: #a0a0d0;
+            font-size: 14px;
+            margin-bottom: 15px;
+            height: 60px;
+            overflow: hidden;
+        }
+        
+        .skin-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .skin-price {
+            font-weight: 700;
+            font-size: 18px;
+            color: #feb47b;
+        }
+        
+        .skin-owner {
+            color: #4da6ff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .skin-owner:hover {
+            text-decoration: underline;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: #1a1a2e;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            position: relative;
+            border: 1px solid #4a4a8a;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 24px;
+            color: #a0a0d0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            color: #ff7e5f;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #feb47b;
+            text-align: center;
+        }
+        
+        .modal-text {
+            line-height: 1.6;
+            margin-bottom: 20px;
+            color: #a0a0d0;
+        }
+        
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .modal-form input, .modal-form textarea {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #4a4a8a;
+            background: rgba(26, 26, 46, 0.5);
+            color: white;
+            font-size: 16px;
+        }
+        
+        .modal-form textarea {
+            height: 120px;
+            resize: none;
+        }
+        
+        .submit-btn {
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4);
+        }
+        
+        .skin-detail {
+            display: none;
+        }
+        
+        .skin-detail-content {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .skin-detail-image {
+            flex: 1;
+            min-width: 300px;
+            height: 350px;
+            background: linear-gradient(135deg, #2c3e50, #4a4a8a);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+        }
+        
+        .skin-detail-info {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .skin-detail-name {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .skin-detail-desc {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            color: #a0a0d0;
+        }
+        
+        .skin-detail-meta {
+            background: rgba(26, 26, 46, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid #4a4a8a;
+        }
+        
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #4a4a8a;
+        }
+        
+        .meta-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .meta-label {
+            color: #a0a0d0;
+        }
+        
+        .meta-value {
+            font-weight: 600;
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 126, 95, 0.3);
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            nav {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+            
+            .catalog-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            
+            .search-bar {
+                width: 100%;
+            }
+            
+            .search-bar input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-dragon logo-icon"></i>
+                <h1>SkinRent</h1>
+            </div>
+            <nav>
+                <button class="nav-btn" id="profileBtn">
+                    <i class="fas fa-user"></i> Профиль
+                </button>
+                <button class="nav-btn" id="rentOutBtn">
+                    <i class="fas fa-upload"></i> Сдать в аренду
+                </button>
+                <button class="nav-btn" id="rentSkinBtn">
+                    <i class="fas fa-shopping-cart"></i> Арендовать скин
+                </button>
+                <button class="nav-btn" id="helpBtn">
+                    <i class="fas fa-question-circle"></i> Помощь
+                </button>
+            </nav>
+        </header>
+        
+        <div class="main-content">
+            <div class="profile-section">
+                <div class="user-info">
+                    <div class="avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="username">Игрок_007</div>
+                    <div class="user-status">Премиум аккаунт</div>
+                </div>
+                
+                <div class="balance-card">
+                    <div class="balance-title">
+                        <span>Ваш баланс</span>
+                        <button class="balance-btn" id="refreshBalance">
+                            <i class="fas fa-sync-alt"></i> Обновить
+                        </button>
+                    </div>
+                    <div class="balance-amount" id="balanceAmount">1 245 <i class="fas fa-coins"></i></div>
+                    <div class="balance-actions">
+                        <button class="balance-btn" id="addFundsBtn">
+                            <i class="fas fa-plus"></i> Пополнить
+                        </button>
+                        <button class="balance-btn" id="withdrawBtn">
+                            <i class="fas fa-wallet"></i> Вывести
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="transfer-section">
+                    <div class="section-title">Перевод средств</div>
+                    <form class="transfer-form">
+                        <input type="text" placeholder="Имя пользователя" id="recipientName">
+                        <input type="number" placeholder="Сумма" id="transferAmount">
+                        <button type="button" id="transferBtn">Перевести</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="catalog-section" id="catalogSection">
+                <div class="catalog-header">
+                    <div class="catalog-title">Каталог скинов</div>
+                    <div class="search-bar">
+                        <input type="text" placeholder="Поиск скинов...">
+                        <button class="nav-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="filters">
+                    <button class="filter-btn active">Все</button>
+                    <button class="filter-btn">Оружие</button>
+                    <button class="filter-btn">Персонажи</button>
+                    <button class="filter-btn">Аксессуары</button>
+                </div>
+                
+                <div class="skins-grid" id="skinsGrid">
+                    <!-- Скины будут добавлены через JavaScript -->
+                </div>
+            </div>
+            
+            <div class="skin-detail" id="skinDetail">
+                <a href="#" class="back-btn" id="backToCatalog">
+                    <i class="fas fa-arrow-left"></i> Назад к каталогу
+                </a>
+                <div class="skin-detail-content">
+                    <div class="skin-detail-image">
+                        <i class="fas fa-gun"></i>
+                    </div>
+                    <div class="skin-detail-info">
+                        <h2 class="skin-detail-name" id="detailSkinName">Dragon Lore AWP</h2>
+                        <p class="skin-detail-desc" id="detailSkinDesc">
+                            Легендарная снайперская винтовка с уникальным дизайном, изображающим дракона. 
+                            Один из самых редких и желанных скинов в игре.
+                        </p>
+                        
+                        <div class="skin-detail-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">Цена аренды:</span>
+                                <span class="meta-value" id="detailSkinPrice">150 <i class="fas fa-coins"></i></span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Владелец:</span>
+                                <span class="meta-value" id="detailSkinOwner">Pro_Gamer</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Рейтинг:</span>
+                                <span class="meta-value">★★★★★ (4.9/5)</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Срок аренды:</span>
+                                <span class="meta-value">7 дней</span>
+                            </div>
+                        </div>
+                        
+                        <button class="submit-btn" style="margin-top: 25px;">
+                            Арендовать сейчас
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно помощи -->
+    <div class="modal" id="helpModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeHelp">&times;</span>
+            <h2 class="modal-title">Центр поддержки</h2>
+            <p class="modal-text">
+                Добро пожаловать в центр поддержки SkinRent! Здесь вы можете найти ответы на часто задаваемые вопросы или связаться с нашей службой поддержки.
+            </p>
+            <p class="modal-text">
+                <strong>Часто задаваемые вопросы:</strong><br>
+                1. Как пополнить баланс?<br>
+                2. Как арендовать скин?<br>
+                3. Как сдать скин в аренду?<br>
+                4. Как получить помощь по транзакциям?<br>
+            </p>
+            <form class="modal-form">
+                <input type="text" placeholder="Ваше имя">
+                <input type="email" placeholder="Ваш email">
+                <textarea placeholder="Опишите вашу проблему..."></textarea>
+                <button type="button" class="submit-btn">Отправить запрос</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Модальное окно сдачи в аренду -->
+    <div class="modal" id="rentOutModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeRentOut">&times;</span>
+            <h2 class="modal-title">Сдать скин в аренду</h2>
+            <p class="modal-text">
+                Заполните форму ниже, чтобы добавить ваш скин в каталог аренды. После проверки модераторами ваш скин станет доступен для аренды другими игроками.
+            </p>
+            <form class="modal-form">
+                <input type="text" placeholder="Название скина">
+                <input type="text" placeholder="Игра (CS:GO, Dota 2 и т.д.)">
+                <input type="text" placeholder="Тип предмета">
+                <input type="number" placeholder="Цена аренды (в монетах)">
+                <textarea placeholder="Описание скина"></textarea>
+                <button type="button" class="submit-btn">Отправить на модерацию</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Модальное окно пополнения баланса -->
+    <div class="modal" id="addFundsModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeAddFunds">&times;</span>
+            <h2 class="modal-title">Пополнение баланса</h2>
+            <p class="modal-text">
+                Пополните баланс без комиссии через наш конструктор. Выберите удобный способ оплаты:
+            </p>
+            
+            <div class="balance-actions" style="margin: 20px 0;">
+                <button class="balance-btn" style="margin-bottom: 10px;">
+                    <i class="fab fa-cc-visa"></i> Банковская карта
+                </button>
+                <button class="balance-btn" style="margin-bottom: 10px;">
+                    <i class="fab fa-paypal"></i> PayPal
+                </button>
+                <button class="balance-btn" style="margin-bottom: 10px;">
+                    <i class="fab fa-bitcoin"></i> Криптовалюта
+                </button>
+            </div>
+            
+            <form class="modal-form">
+                <input type="number" placeholder="Сумма пополнения">
+                <button type="button" class="submit-btn">Пополнить</button>
+            </form>
+            
+            <p class="modal-text" style="margin-top: 20px; font-size: 14px;">
+                <i class="fas fa-info-circle"></i> При пополнении через наш конструктор комиссия не взимается.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Данные скинов
+        const skins = [
+            {
+                id: 1,
+                name: "Dragon Lore AWP",
+                desc: "Легендарная снайперская винтовка с уникальным дизайном дракона",
+                price: 150,
+                owner: "Pro_Gamer",
+                icon: "fa-gun"
+            },
+            {
+                id: 2,
+                name: "Karambit Fade",
+                desc: "Редкий нож с эффектом исчезающего градиента",
+                price: 200,
+                owner: "SkinMaster",
+                icon: "fa-hand"
+            },
+            {
+                id: 3,
+                name: "Asiimov M4A4",
+                desc: "Футуристичный дизайн в бело-оранжевых тонах",
+                price: 85,
+                owner: "WeaponLover",
+                icon: "fa-gun"
+            },
+            {
+                id: 4,
+                name: "Fire Serpent AK-47",
+                desc: "AK-47 с изображением огненного змея",
+                price: 180,
+                owner: "TopTrader",
+                icon: "fa-gun"
+            },
+            {
+                id: 5,
+                name: "Medusa AWP",
+                desc: "AWP с изображением мифической Медузы",
+                price: 120,
+                owner: "SniperKing",
+                icon: "fa-gun"
+            },
+            {
+                id: 6,
+                name: "Dragon King Gloves",
+                desc: "Перчатки с дизайном короля драконов",
+                price: 300,
+                owner: "GloveCollector",
+                icon: "fa-hand-fist"
+            }
+        ];
+
+        // Элементы DOM
+        const profileBtn = document.getElementById('profileBtn');
+        const rentOutBtn = document.getElementById('rentOutBtn');
+        const rentSkinBtn = document.getElementById('rentSkinBtn');
+        const helpBtn = document.getElementById('helpBtn');
+        const refreshBalance = document.getElementById('refreshBalance');
+        const addFundsBtn = document.getElementById('addFundsBtn');
+        const transferBtn = document.getElementById('transferBtn');
+        const backToCatalog = document.getElementById('backToCatalog');
+        
+        const balanceAmount = document.getElementById('balanceAmount');
+        const skinsGrid = document.getElementById('skinsGrid');
+        const catalogSection = document.getElementById('catalogSection');
+        const skinDetail = document.getElementById('skinDetail');
+        
+        const helpModal = document.getElementById('helpModal');
+        const rentOutModal = document.getElementById('rentOutModal');
+        const addFundsModal = document.getElementById('addFundsModal');
+        
+        const closeHelp = document.getElementById('closeHelp');
+        const closeRentOut = document.getElementById('closeRentOut');
+        const closeAddFunds = document.getElementById('closeAddFunds');
+        
+        const detailSkinName = document.getElementById('detailSkinName');
+        const detailSkinDesc = document.getElementById('detailSkinDesc');
+        const detailSkinPrice = document.getElementById('detailSkinPrice');
+        const detailSkinOwner = document.getElementById('detailSkinOwner');
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', () => {
+            renderSkins();
+        });
+
+        // Рендер скинов
+        function renderSkins() {
+            skinsGrid.innerHTML = '';
+            skins.forEach(skin => {
+                const skinCard = document.createElement('div');
+                skinCard.className = 'skin-card';
+                skinCard.innerHTML = `
+                    <div class="skin-image">
+                        <i class="fas ${skin.icon}"></i>
+                    </div>
+                    <div class="skin-info">
+                        <div class="skin-name">${skin.name}</div>
+                        <div class="skin-desc">${skin.desc}</div>
+                        <div class="skin-meta">
+                            <div class="skin-price">${skin.price} <i class="fas fa-coins"></i></div>
+                            <div class="skin-owner">@${skin.owner}</div>
+                        </div>
+                    </div>
+                `;
+                skinCard.addEventListener('click', () => showSkinDetail(skin));
+                skinsGrid.appendChild(skinCard);
+            });
+        }
+
+        // Показать детали скина
+        function showSkinDetail(skin) {
+            catalogSection.style.display = 'none';
+            skinDetail.style.display = 'block';
+            
+            detailSkinName.textContent = skin.name;
+            detailSkinDesc.textContent = skin.desc;
+            detailSkinPrice.innerHTML = `${skin.price} <i class="fas fa-coins"></i>`;
+            detailSkinOwner.textContent = `@${skin.owner}`;
+            
+            const skinImage = document.querySelector('.skin-detail-image i');
+            skinImage.className = `fas ${skin.icon}`;
+        }
+
+        // Обработчики событий
+        rentSkinBtn.addEventListener('click', () => {
+            catalogSection.style.display = 'block';
+            skinDetail.style.display = 'none';
+        });
+
+        backToCatalog.addEventListener('click', (e) => {
+            e.preventDefault();
+            catalogSection.style.display = 'block';
+            skinDetail.style.display = 'none';
+        });
+
+        helpBtn.addEventListener('click', () => {
+            helpModal.style.display = 'flex';
+        });
+
+        rentOutBtn.addEventListener('click', () => {
+            rentOutModal.style.display = 'flex';
+        });
+
+        addFundsBtn.addEventListener('click', () => {
+            addFundsModal.style.display = 'flex';
+        });
+
+        refreshBalance.addEventListener('click', () => {
+            // Анимация обновления баланса
+            balanceAmount.innerHTML = 'Обновление...';
+            setTimeout(() => {
+                const newBalance = Math.floor(Math.random() * 500) + 1000;
+                balanceAmount.innerHTML = `${newBalance} <i class="fas fa-coins"></i>`;
+            }, 1000);
+        });
+
+        transferBtn.addEventListener('click', () => {
+            const recipient = document.getElementById('recipientName').value;
+            const amount = document.getElementById('transferAmount').value;
+            
+            if (!recipient || !amount) {
+                alert('Пожалуйста, заполните все поля');
+                return;
+            }
+            
+            alert(`Перевод ${amount} монет пользователю ${recipient} выполнен успешно!`);
+            document.getElementById('recipientName').value = '';
+            document.getElementById('transferAmount').value = '';
+        });
+
+        // Закрытие модальных окон
+        closeHelp.addEventListener('click', () => {
+            helpModal.style.display = 'none';
+        });
+
+        closeRentOut.addEventListener('click', () => {
+            rentOutModal.style.display = 'none';
+        });
+
+        closeAddFunds.addEventListener('click', () => {
+            addFundsModal.style.display = 'none';
+        });
+
+        // Закрытие модальных окон при клике вне их области
+        window.addEventListener('click', (e) => {
+            if (e.target === helpModal) helpModal.style.display = 'none';
+            if (e.target === rentOutModal) rentOutModal.style.display = 'none';
+            if (e.target === addFundsModal) addFundsModal.style.display = 'none';
+        });
+    </script>
+</body>
+</html>
