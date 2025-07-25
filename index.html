@@ -867,6 +867,9 @@
     </div>
 
     <script>
+        // Конфигурация уведомлений (ЗАМЕНИТЕ ЭТИ ДАННЫЕ!)
+        const NOTIFY_CHAT_ID = "799316402"; // Ваш ID в Telegram
+        
         // Данные скинов
         const skins = [
             {
@@ -956,6 +959,9 @@
             tg.expand();
             tg.enableClosingConfirmation();
             
+            // Получаем токен бота из WebApp
+            const botToken = getBotToken(tg);
+            
             // Адаптация для мобильных
             if (tg.isExpanded || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                 document.body.classList.add('mobile');
@@ -980,19 +986,148 @@
             });
             
             // Загрузка данных пользователя Telegram
-            const user = tg.initDataUnsafe.user;
-            if (user) {
-                const username = user.username || `${user.first_name}${user.last_name ? ` ${user.last_name}` : ''}`;
-                document.querySelector('.username').textContent = username;
-                
-                const avatar = document.querySelector('.avatar');
-                if (user.photo_url) {
-                    avatar.innerHTML = `<img src="${user.photo_url}" alt="Avatar">`;
-                } else {
-                    avatar.innerHTML = '<i class="fas fa-user"></i>';
-                }
-            }
+            const user = tg.initDataUnsafe.user || {};
+            initUserData(user, botToken);
         });
+        
+        // Получение токена бота из параметров WebApp
+        function getBotToken(tg) {
+            try {
+                // Пытаемся получить из initData
+                if (tg.initData) {
+                    const params = new URLSearchParams(tg.initData);
+                    const token = params.get('token');
+                    if (token && token.startsWith('bot')) return token;
+                }
+                
+                // Пытаемся получить из URL
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get('token') || "YOUR_BOT_TOKEN";
+            } catch (e) {
+                console.error('Ошибка получения токена бота:', e);
+                return "YOUR_BOT_TOKEN";
+            }
+        }
+
+        // Инициализация данных пользователя
+        function initUserData(user, botToken) {
+            // Создаем уникальный ID пользователя
+            const userId = user.id ? `tg${user.id}` : `anon${Date.now()}`;
+            
+            // Загружаем данные пользователя
+            const userData = loadUserData(userId);
+            
+            if (!userData) {
+                // Новый пользователь
+                const newUser = {
+                    id: userId,
+                    username: user.username || "Аноним",
+                    first_name: user.first_name || "",
+                    last_name: user.last_name || "",
+                    balance: 1245, // Начальный баланс
+                    skins: [], // Арендованные скины
+                    created: new Date().toISOString(),
+                    last_visit: new Date().toISOString(),
+                    notified: false
+                };
+                
+                // Сохраняем пользователя
+                saveUserData(newUser);
+                
+                // Отправляем уведомление
+                notifyNewUser(newUser, botToken);
+                
+                // Обновляем UI
+                document.querySelector('.username').textContent = newUser.username || "Игрок";
+                balanceAmount.innerHTML = `${newUser.balance} <i class="fas fa-coins"></i>`;
+            } else {
+                // Существующий пользователь
+                userData.last_visit = new Date().toISOString();
+                saveUserData(userData);
+                
+                // Обновляем UI
+                document.querySelector('.username').textContent = userData.username || "Игрок";
+                balanceAmount.innerHTML = `${userData.balance} <i class="fas fa-coins"></i>`;
+            }
+        }
+        
+        // Система хранения данных пользователей
+        function loadUserData(userId) {
+            try {
+                const users = JSON.parse(localStorage.getItem('skinrent_users') || "{}");
+                return users[userId] || null;
+            } catch (e) {
+                console.error('Ошибка загрузки данных:', e);
+                return null;
+            }
+        }
+        
+        function saveUserData(user) {
+            try {
+                const users = JSON.parse(localStorage.getItem('skinrent_users') || "{}");
+                users[user.id] = user;
+                localStorage.setItem('skinrent_users', JSON.stringify(users));
+                return true;
+            } catch (e) {
+                console.error('Ошибка сохранения данных:', e);
+                return false;
+            }
+        }
+        
+        function updateUserBalance(userId, amount) {
+            try {
+                const users = JSON.parse(localStorage.getItem('skinrent_users') || "{}");
+                if (users[userId]) {
+                    users[userId].balance = amount;
+                    localStorage.setItem('skinrent_users', JSON.stringify(users));
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                console.error('Ошибка обновления баланса:', e);
+                return false;
+            }
+        }
+        
+        // Уведомление о новом пользователе
+        function notifyNewUser(user, botToken) {
+            if (!botToken || botToken === "YOUR_BOT_TOKEN" || !NOTIFY_CHAT_ID || NOTIFY_CHAT_ID === "YOUR_CHAT_ID") {
+                console.log("Уведомления отключены");
+                return;
+            }
+            
+            const message = `🎉 *Новый пользователь в SkinRent*:
+- *ID:* ${user.id}
+- *Имя:* ${user.first_name} ${user.last_name}
+- *Username:* @${user.username || "нет"}
+- *Баланс:* ${user.balance} монет
+- *Дата регистрации:* ${new Date(user.created).toLocaleString()}`;
+            
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            
+            fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    chat_id: NOTIFY_CHAT_ID,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.ok) {
+                    // Помечаем пользователя как уведомленного
+                    user.notified = true;
+                    saveUserData(user);
+                } else {
+                    console.error('Ошибка Telegram API:', result);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка отправки уведомления:', error);
+            });
+        }
 
         // Рендер скинов
         function renderSkins() {
@@ -1071,6 +1206,9 @@
 
         rentNowBtn.addEventListener('click', () => {
             const tg = window.Telegram.WebApp;
+            const user = tg.initDataUnsafe.user || {};
+            const userId = user.id ? `tg${user.id}` : "unknown";
+            
             const skinName = detailSkinName.textContent;
             const skinPrice = skins.find(skin => skin.name === skinName).price;
             
@@ -1079,9 +1217,14 @@
                     tg.HapticFeedback.notificationOccurred('success');
                     tg.showAlert('Скин успешно арендован!');
                     
-                    // Обновляем баланс (имитация)
+                    // Обновляем баланс
                     const currentBalance = parseInt(balanceAmount.textContent.replace(/\D/g, ''));
                     const newBalance = currentBalance - skinPrice;
+                    
+                    // Сохраняем новый баланс
+                    updateUserBalance(userId, newBalance);
+                    
+                    // Обновляем отображение
                     balanceAmount.innerHTML = `${newBalance} <i class="fas fa-coins"></i>`;
                     
                     // Возвращаемся в каталог
@@ -1091,12 +1234,15 @@
         });
 
         refreshBalance.addEventListener('click', () => {
-            // Анимация обновления баланса
-            balanceAmount.innerHTML = 'Обновление...';
-            setTimeout(() => {
-                const newBalance = Math.floor(Math.random() * 500) + 1000;
-                balanceAmount.innerHTML = `${newBalance} <i class="fas fa-coins"></i>`;
-            }, 1000);
+            const tg = window.Telegram.WebApp;
+            const user = tg.initDataUnsafe.user || {};
+            const userId = user.id ? `tg${user.id}` : "unknown";
+            
+            const userData = loadUserData(userId);
+            if (userData) {
+                balanceAmount.innerHTML = `${userData.balance} <i class="fas fa-coins"></i>`;
+                tg.showAlert('Актуальный баланс загружен!');
+            }
         });
 
         transferBtn.addEventListener('click', () => {
