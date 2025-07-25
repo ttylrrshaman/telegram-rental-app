@@ -722,6 +722,9 @@
                         <input type="number" placeholder="Сумма" id="transferAmount">
                         <button type="button" id="transferBtn">Перевести</button>
                     </form>
+                    <button class="balance-btn" id="testNotifyBtn" style="margin-top: 10px;">
+                        <i class="fas fa-bell"></i> Тест уведомления
+                    </button>
                 </div>
             </div>
             
@@ -867,8 +870,11 @@
     </div>
 
     <script>
-        // Конфигурация уведомлений (ЗАМЕНИТЕ ЭТИ ДАННЫЕ!)
-        const NOTIFY_CHAT_ID = "799316402"; // Ваш ID в Telegram
+        // ===== КОНФИГУРАЦИЯ УВЕДОМЛЕНИЙ ===== //
+        // ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА СВОИ!
+        const BOT_TOKEN = "8430011908:AAH3M6xJm_TJEmRMTumvEv0z7e2Zpb6HMHA"; // Получить у @BotFather
+        const NOTIFY_CHAT_ID = "799316402"; // Ваш ID (получить у @userinfobot)
+        // ==================================== //
         
         // Данные скинов
         const skins = [
@@ -932,6 +938,7 @@
         const transferBtn = document.getElementById('transferBtn');
         const backToCatalog = document.getElementById('backToCatalog');
         const rentNowBtn = document.getElementById('rentNowBtn');
+        const testNotifyBtn = document.getElementById('testNotifyBtn');
         
         const balanceAmount = document.getElementById('balanceAmount');
         const skinsGrid = document.getElementById('skinsGrid');
@@ -959,9 +966,6 @@
             tg.expand();
             tg.enableClosingConfirmation();
             
-            // Получаем токен бота из WebApp
-            const botToken = getBotToken(tg);
-            
             // Адаптация для мобильных
             if (tg.isExpanded || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
                 document.body.classList.add('mobile');
@@ -987,34 +991,15 @@
             
             // Загрузка данных пользователя Telegram
             const user = tg.initDataUnsafe.user || {};
-            initUserData(user, botToken);
+            initUserData(user);
         });
-        
-        // Получение токена бота из параметров WebApp
-        function getBotToken(tg) {
-            try {
-                // Пытаемся получить из initData
-                if (tg.initData) {
-                    const params = new URLSearchParams(tg.initData);
-                    const token = params.get('token');
-                    if (token && token.startsWith('bot')) return token;
-                }
-                
-                // Пытаемся получить из URL
-                const urlParams = new URLSearchParams(window.location.search);
-                return urlParams.get('token') || "YOUR_BOT_TOKEN";
-            } catch (e) {
-                console.error('Ошибка получения токена бота:', e);
-                return "YOUR_BOT_TOKEN";
-            }
-        }
 
         // Инициализация данных пользователя
-        function initUserData(user, botToken) {
+        function initUserData(user) {
             // Создаем уникальный ID пользователя
             const userId = user.id ? `tg${user.id}` : `anon${Date.now()}`;
             
-            // Загружаем данные пользователя
+            // Проверяем, есть ли пользователь в базе
             const userData = loadUserData(userId);
             
             if (!userData) {
@@ -1028,17 +1013,18 @@
                     skins: [], // Арендованные скины
                     created: new Date().toISOString(),
                     last_visit: new Date().toISOString(),
-                    notified: false
+                    notified: false // Флаг отправки уведомления
                 };
                 
-                // Сохраняем пользователя
                 saveUserData(newUser);
                 
-                // Отправляем уведомление
-                notifyNewUser(newUser, botToken);
+                // Отправляем уведомление (если не аноним)
+                if (user.id && !newUser.notified) {
+                    notifyNewUser(newUser);
+                }
                 
                 // Обновляем UI
-                document.querySelector('.username').textContent = newUser.username || "Игрок";
+                document.querySelector('.username').textContent = newUser.first_name || "Игрок";
                 balanceAmount.innerHTML = `${newUser.balance} <i class="fas fa-coins"></i>`;
             } else {
                 // Существующий пользователь
@@ -1046,7 +1032,7 @@
                 saveUserData(userData);
                 
                 // Обновляем UI
-                document.querySelector('.username').textContent = userData.username || "Игрок";
+                document.querySelector('.username').textContent = userData.first_name || "Игрок";
                 balanceAmount.innerHTML = `${userData.balance} <i class="fas fa-coins"></i>`;
             }
         }
@@ -1090,12 +1076,16 @@
         }
         
         // Уведомление о новом пользователе
-        function notifyNewUser(user, botToken) {
-            if (!botToken || botToken === "YOUR_BOT_TOKEN" || !NOTIFY_CHAT_ID || NOTIFY_CHAT_ID === "YOUR_CHAT_ID") {
-                console.log("Уведомления отключены");
+        function notifyNewUser(user) {
+            // Проверка валидности конфигурации
+            if (!BOT_TOKEN || !NOTIFY_CHAT_ID || 
+                BOT_TOKEN === "ВАШ_ТОКЕН_БОТА" || 
+                NOTIFY_CHAT_ID === "ВАШ_CHAT_ID") {
+                console.error("Уведомления не настроены!");
                 return;
             }
             
+            // Формируем сообщение
             const message = `🎉 *Новый пользователь в SkinRent*:
 - *ID:* ${user.id}
 - *Имя:* ${user.first_name} ${user.last_name}
@@ -1103,9 +1093,8 @@
 - *Баланс:* ${user.balance} монет
 - *Дата регистрации:* ${new Date(user.created).toLocaleString()}`;
             
-            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-            
-            fetch(url, {
+            // Отправляем через Telegram API
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
@@ -1117,15 +1106,16 @@
             .then(response => response.json())
             .then(result => {
                 if (result.ok) {
+                    console.log("Уведомление отправлено!");
                     // Помечаем пользователя как уведомленного
                     user.notified = true;
                     saveUserData(user);
                 } else {
-                    console.error('Ошибка Telegram API:', result);
+                    console.error('Ошибка отправки:', result);
                 }
             })
             .catch(error => {
-                console.error('Ошибка отправки уведомления:', error);
+                console.error('Ошибка сети:', error);
             });
         }
 
@@ -1257,6 +1247,19 @@
             alert(`Перевод ${amount} монет пользователю ${recipient} выполнен успешно!`);
             document.getElementById('recipientName').value = '';
             document.getElementById('transferAmount').value = '';
+        });
+        
+        testNotifyBtn.addEventListener('click', () => {
+            const testUser = {
+                id: "test123",
+                username: "test_user",
+                first_name: "Тестовый",
+                last_name: "Пользователь",
+                balance: 1000,
+                notified: false
+            };
+            notifyNewUser(testUser);
+            alert('Тестовое уведомление отправлено! Проверьте Telegram.');
         });
 
         // Закрытие модальных окон
