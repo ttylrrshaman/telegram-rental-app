@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SkinRent - Аренда игровых скинов</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -19,6 +19,7 @@
             color: #e6e6e6;
             min-height: 100vh;
             padding: 20px;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .container {
@@ -71,6 +72,7 @@
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
         }
         
@@ -127,12 +129,6 @@
             font-size: 22px;
             font-weight: 700;
             margin-bottom: 5px;
-        }
-        
-        .user-status {
-            color: #4da6ff;
-            font-size: 14px;
-            margin-bottom: 20px;
         }
         
         .balance-card {
@@ -251,6 +247,7 @@
         .search-bar {
             display: flex;
             gap: 10px;
+            width: 100%;
         }
         
         .search-bar input {
@@ -259,13 +256,14 @@
             border: 1px solid #4a4a8a;
             background: rgba(26, 26, 46, 0.5);
             color: white;
-            width: 250px;
+            flex: 1;
         }
         
         .filters {
             display: flex;
             gap: 10px;
             margin-bottom: 25px;
+            flex-wrap: wrap;
         }
         
         .filter-btn {
@@ -276,6 +274,7 @@
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
         
         .filter-btn.active {
@@ -348,6 +347,11 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
+            font-size: 14px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            max-width: 100px;
         }
         
         .skin-owner:hover {
@@ -542,12 +546,13 @@
                 width: 100%;
                 overflow-x: auto;
                 padding-bottom: 10px;
+                justify-content: center;
             }
             
             .catalog-header {
                 flex-direction: column;
                 gap: 15px;
-                align-items: flex-start;
+                align-items: stretch;
             }
             
             .search-bar {
@@ -556,6 +561,66 @@
             
             .search-bar input {
                 width: 100%;
+            }
+            
+            .nav-btn span {
+                display: none;
+            }
+            
+            .nav-btn {
+                padding: 12px 15px;
+            }
+            
+            .transfer-section {
+                display: none;
+            }
+            
+            .skins-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .skin-image {
+                height: 140px;
+            }
+            
+            .skin-name {
+                font-size: 16px;
+            }
+            
+            .skin-desc {
+                font-size: 12px;
+                height: 50px;
+            }
+            
+            .skin-price, .skin-owner {
+                font-size: 14px;
+            }
+            
+            .skin-owner {
+                max-width: 70px;
+            }
+            
+            .filters {
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+            
+            .skin-detail-content {
+                flex-direction: column;
+            }
+            
+            .skin-detail-image {
+                min-width: 100%;
+                height: 250px;
+                margin-bottom: 20px;
+            }
+            
+            .skin-detail-name {
+                font-size: 24px;
+            }
+            
+            .skin-detail-desc {
+                font-size: 16px;
             }
         }
         
@@ -605,16 +670,20 @@
             </div>
             <nav>
                 <button class="nav-btn" id="profileBtn">
-                    <i class="fas fa-user"></i> Профиль
+                    <i class="fas fa-user"></i>
+                    <span>Профиль</span>
                 </button>
                 <button class="nav-btn" id="rentOutBtn">
-                    <i class="fas fa-upload"></i> Сдать в аренду
+                    <i class="fas fa-upload"></i>
+                    <span>Сдать в аренду</span>
                 </button>
                 <button class="nav-btn" id="rentSkinBtn">
-                    <i class="fas fa-shopping-cart"></i> Арендовать скин
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Арендовать скин</span>
                 </button>
                 <button class="nav-btn" id="helpBtn">
-                    <i class="fas fa-question-circle"></i> Помощь
+                    <i class="fas fa-question-circle"></i>
+                    <span>Помощь</span>
                 </button>
             </nav>
         </header>
@@ -626,7 +695,6 @@
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="username">Игрок_007</div>
-                    <div class="user-status">Премиум аккаунт</div>
                 </div>
                 
                 <div class="balance-card">
