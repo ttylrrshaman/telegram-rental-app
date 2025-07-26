@@ -1128,275 +1128,158 @@
     </div>
 
     <script>
-        // ===== КОНФИГУРАЦИЯ УВЕДОМЛЕНИЙ ===== //
-        // ЗАМЕНИТЕ ЭТИ ЗНАЧЕНИЯ НА СВОИ!
-        const BOT_TOKEN = "8430011908:AAH3M6xJm_TJEmRMTumvEv0z7e2Zpb6HMHA"; // Получить у @BotFather
-        const NOTIFY_CHAT_ID = "799316402"; // Ваш ID (получить у @userinfobot)
-        // ==================================== //
-        
-        // ID администраторов (добавьте свои ID)
+        // ===== КОНФИГУРАЦИЯ ===== //
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxvEaI_dIo7CgalW1x_K8dKc29cArFkamxI17loVSXatll54fEgJJ5czMBK_gCnKk2E/exec'; // Замените на URL вашего Google Apps Script
+        const BOT_TOKEN = "8430011908:AAH3M6xJm_TJEmRMTumvEv0z7e2Zpb6HMHA";
+        const NOTIFY_CHAT_ID = "799316402";
         const ADMIN_USER_IDS = ["799316402", "tg799316402"];
         
-        // Данные скинов
-        let skins = [
-            {
-                id: 1,
-                name: "Dragon Lore AWP",
-                desc: "Легендарная снайперская винтовка с уникальным дизайном дракона",
-                price: 150,
-                owner: "Pro_Gamer",
-                icon: "fa-gun"
-            },
-            {
-                id: 2,
-                name: "Karambit Fade",
-                desc: "Редкий нож с эффектом исчезающего градиента",
-                price: 200,
-                owner: "SkinMaster",
-                icon: "fa-hand"
-            },
-            {
-                id: 3,
-                name: "Asiimov M4A4",
-                desc: "Футуристичный дизайн в бело-оранжевых тонах",
-                price: 85,
-                owner: "WeaponLover",
-                icon: "fa-gun"
-            },
-            {
-                id: 4,
-                name: "Fire Serpent AK-47",
-                desc: "AK-47 с изображением огненного змея",
-                price: 180,
-                owner: "TopTrader",
-                icon: "fa-gun"
-            },
-            {
-                id: 5,
-                name: "Medusa AWP",
-                desc: "AWP с изображением мифической Медузы",
-                price: 120,
-                owner: "SniperKing",
-                icon: "fa-gun"
-            },
-            {
-                id: 6,
-                name: "Dragon King Gloves",
-                desc: "Перчатки с дизайном короля драконов",
-                price: 300,
-                owner: "GloveCollector",
-                icon: "fa-hand-fist"
-            }
-        ];
-
-        // Элементы DOM
-        const profileBtn = document.getElementById('profileBtn');
-        const rentOutBtn = document.getElementById('rentOutBtn');
-        const rentSkinBtn = document.getElementById('rentSkinBtn');
-        const helpBtn = document.getElementById('helpBtn');
-        const adminBtn = document.getElementById('adminBtn');
-        const refreshBalance = document.getElementById('refreshBalance');
-        const addFundsBtn = document.getElementById('addFundsBtn');
-        const transferBtn = document.getElementById('transferBtn');
-        const backToCatalog = document.getElementById('backToCatalog');
-        const rentNowBtn = document.getElementById('rentNowBtn');
-        const testNotifyBtn = document.getElementById('testNotifyBtn');
-        const backToApp = document.getElementById('backToApp');
-        const addSkinBtn = document.getElementById('addSkinBtn');
-        
-        const balanceAmount = document.getElementById('balanceAmount');
-        const skinsGrid = document.getElementById('skinsGrid');
-        const catalogSection = document.getElementById('catalogSection');
-        const skinDetail = document.getElementById('skinDetail');
-        const adminPanel = document.getElementById('adminPanel');
-        
-        const helpModal = document.getElementById('helpModal');
-        const rentOutModal = document.getElementById('rentOutModal');
-        const addFundsModal = document.getElementById('addFundsModal');
-        const editUserModal = document.getElementById('editUserModal');
-        const editSkinModal = document.getElementById('editSkinModal');
-        
-        const closeHelp = document.getElementById('closeHelp');
-        const closeRentOut = document.getElementById('closeRentOut');
-        const closeAddFunds = document.getElementById('closeAddFunds');
-        const closeEditUser = document.getElementById('closeEditUser');
-        const closeEditSkin = document.getElementById('closeEditSkin');
-        
-        const detailSkinName = document.getElementById('detailSkinName');
-        const detailSkinDesc = document.getElementById('detailSkinDesc');
-        const detailSkinPrice = document.getElementById('detailSkinPrice');
-        const detailSkinOwner = document.getElementById('detailSkinOwner');
-        
-        const usersTableBody = document.getElementById('usersTableBody');
-        const skinsTableBody = document.getElementById('skinsTableBody');
-        const totalUsers = document.getElementById('totalUsers');
-        const totalSkins = document.getElementById('totalSkins');
-        const totalBalance = document.getElementById('totalBalance');
-        const newToday = document.getElementById('newToday');
-        
-        const editUserForm = document.getElementById('editUserForm');
-        const editSkinForm = document.getElementById('editSkinForm');
-
-        // Текущий пользователь
+        // Глобальные переменные
+        let skins = [];
         let currentUser = null;
         let isAdmin = false;
 
-        // Инициализация TWA
-        document.addEventListener('DOMContentLoaded', () => {
-            renderSkins();
-            
-            const tg = window.Telegram.WebApp;
-            tg.expand();
-            tg.enableClosingConfirmation();
-            
-            // Адаптация для мобильных
-            if (tg.isExpanded || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-                document.body.classList.add('mobile');
-                
-                // Упрощаем кнопки навигации
-                const navButtons = document.querySelectorAll('.nav-btn');
-                navButtons.forEach(btn => {
-                    const icon = btn.querySelector('i').className;
-                    btn.innerHTML = `<i class="${icon}"></i>`;
-                    btn.style.padding = '12px 15px';
+        // ===== API-функции для работы с Google Таблицами ===== //
+        async function gasRequest(action, data = {}) {
+            try {
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, data })
                 });
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API Error:', error);
+                return { error: 'Network error' };
             }
-            
-            // Навигация с помощью кнопки "Назад"
-            tg.BackButton.show();
-            tg.BackButton.onClick(() => {
-                if (skinDetail.style.display === 'block') {
-                    backToCatalog.click();
-                } else if (adminPanel.style.display === 'block') {
-                    backToApp.click();
-                } else {
-                    tg.close();
-                }
-            });
-            
-            // Загрузка данных пользователя Telegram
-            const user = tg.initDataUnsafe.user || {};
-            initUserData(user);
-            
-            // Проверка прав администратора
-            if (user.id && ADMIN_USER_IDS.includes(`tg${user.id}`)) {
-                isAdmin = true;
-                adminBtn.style.display = 'flex';
-            } else {
-                adminBtn.style.display = 'none';
-            }
-            
-            // Настройка табов админ-панели
-            setupAdminTabs();
-        });
+        }
 
-        // Инициализация данных пользователя
-        function initUserData(user) {
-            currentUser = user;
-            // Создаем уникальный ID пользователя
+        // Пользователи
+        async function getUserData(userId) {
+            const result = await gasRequest('getUser', { userId });
+            return result.error ? null : result;
+        }
+
+        async function saveUserData(user) {
+            return await gasRequest('saveUser', { user });
+        }
+
+        async function getAllUsers() {
+            const result = await gasRequest('getAllUsers');
+            return result.error ? [] : result;
+        }
+
+        // Скины
+        async function getSkins() {
+            const result = await gasRequest('getSkins');
+            return result.error ? [] : result;
+        }
+
+        async function saveSkin(skin) {
+            return await gasRequest('saveSkin', { skin });
+        }
+
+        async function deleteSkin(skinId) {
+            return await gasRequest('deleteSkin', { skinId });
+        }
+
+        // Логирование
+        async function logAction(message) {
+            return await gasRequest('logAction', { message });
+        }
+
+        // ===== Основные функции приложения ===== //
+        async function initUserData(user) {
             const userId = user.id ? `tg${user.id}` : `anon${Date.now()}`;
             
-            // Проверяем, есть ли пользователь в базе
-            const userData = loadUserData(userId);
+            let userData = await getUserData(userId);
             
             if (!userData) {
-                // Новый пользователь
-                const newUser = {
+                userData = {
                     id: userId,
                     username: user.username || "Аноним",
                     first_name: user.first_name || "",
                     last_name: user.last_name || "",
-                    balance: 1245, // Начальный баланс
-                    skins: [], // Арендованные скины
+                    balance: 1245,
+                    skins: [],
                     created: new Date().toISOString(),
                     last_visit: new Date().toISOString(),
-                    notified: false // Флаг отправки уведомления
+                    notified: false
                 };
                 
-                saveUserData(newUser);
+                await saveUserData(userData);
                 
-                // Отправляем уведомление (если не аноним)
-                if (user.id && !newUser.notified) {
-                    notifyNewUser(newUser);
+                if (user.id && !userData.notified) {
+                    notifyNewUser(userData);
+                    userData.notified = true;
+                    await saveUserData(userData);
                 }
-                
-                // Обновляем UI
-                document.querySelector('.username').textContent = newUser.first_name || "Игрок";
-                balanceAmount.innerHTML = `${newUser.balance} <i class="fas fa-coins"></i>`;
             } else {
-                // Существующий пользователь
                 userData.last_visit = new Date().toISOString();
-                saveUserData(userData);
-                
-                // Обновляем UI
-                document.querySelector('.username').textContent = userData.first_name || "Игрок";
-                balanceAmount.innerHTML = `${userData.balance} <i class="fas fa-coins"></i>`;
+                await saveUserData(userData);
             }
+            
+            document.querySelector('.username').textContent = userData.first_name || "Игрок";
+            balanceAmount.innerHTML = `${userData.balance} <i class="fas fa-coins"></i>`;
+            currentUser = userData;
         }
-        
-        // Система хранения данных пользователей
-        function loadUserData(userId) {
-            try {
-                const users = JSON.parse(localStorage.getItem('skinrent_users') || "{}");
-                return users[userId] || null;
-            } catch (e) {
-                console.error('Ошибка загрузки данных:', e);
-                return null;
-            }
-        }
-        
-        function saveUserData(user) {
-            try {
-                const users = JSON.parse(localStorage.getItem('skinrent_users') || "{}");
-                users[user.id] = user;
-                localStorage.setItem('skinrent_users', JSON.stringify(users));
+
+        async function updateUserBalance(amount) {
+            if (!currentUser) return false;
+            
+            currentUser.balance = amount;
+            const result = await saveUserData(currentUser);
+            
+            if (result && !result.error) {
+                balanceAmount.innerHTML = `${amount} <i class="fas fa-coins"></i>`;
                 return true;
-            } catch (e) {
-                console.error('Ошибка сохранения данных:', e);
-                return false;
             }
+            return false;
         }
-        
-        function getAllUsers() {
-            try {
-                return JSON.parse(localStorage.getItem('skinrent_users') || "{}");
-            } catch (e) {
-                console.error('Ошибка загрузки пользователей:', e);
-                return {};
-            }
+
+        async function renderSkins() {
+            skins = await getSkins();
+            skinsGrid.innerHTML = '';
+            
+            skins.forEach(skin => {
+                const skinCard = document.createElement('div');
+                skinCard.className = 'skin-card';
+                skinCard.innerHTML = `
+                    <div class="skin-image">
+                        <i class="fas ${skin.icon}"></i>
+                    </div>
+                    <div class="skin-info">
+                        <div class="skin-name">${skin.name}</div>
+                        <div class="skin-desc">${skin.desc}</div>
+                        <div class="skin-meta">
+                            <div class="skin-price">${skin.price} <i class="fas fa-coins"></i></div>
+                            <div class="skin-owner">@${skin.owner}</div>
+                        </div>
+                    </div>
+                `;
+                skinCard.addEventListener('click', () => showSkinDetail(skin));
+                skinsGrid.appendChild(skinCard);
+            });
         }
-        
-        function updateUserBalance(userId, amount) {
-            try {
-                const users = JSON.parse(localStorage.getItem('skinrent_users') || "{}");
-                if (users[userId]) {
-                    users[userId].balance = amount;
-                    localStorage.setItem('skinrent_users', JSON.stringify(users));
-                    return true;
-                }
-                return false;
-            } catch (e) {
-                console.error('Ошибка обновления баланса:', e);
-                return false;
-            }
+
+        function showSkinDetail(skin) {
+            catalogSection.style.display = 'none';
+            skinDetail.style.display = 'block';
+            
+            detailSkinName.textContent = skin.name;
+            detailSkinDesc.textContent = skin.desc;
+            detailSkinPrice.innerHTML = `${skin.price} <i class="fas fa-coins"></i>`;
+            detailSkinOwner.textContent = `@${skin.owner}`;
+            
+            const skinImage = document.querySelector('.skin-detail-image i');
+            skinImage.className = `fas ${skin.icon}`;
         }
-        
-        function saveSkins() {
-            try {
-                localStorage.setItem('skinrent_skins', JSON.stringify(skins));
-                return true;
-            } catch (e) {
-                console.error('Ошибка сохранения скинов:', e);
-                return false;
-            }
-        }
-        
+
         // Уведомление о новом пользователе
-        function notifyNewUser(user) {
+        async function notifyNewUser(user) {
             // Проверка валидности конфигурации
-            if (!BOT_TOKEN || !NOTIFY_CHAT_ID || 
-                BOT_TOKEN === "ВАШ_ТОКЕН_БОТА" || 
-                NOTIFY_CHAT_ID === "ВАШ_CHAT_ID") {
+            if (!BOT_TOKEN || !NOTIFY_CHAT_ID) {
                 console.error("Уведомления не настроены!");
                 return;
             }
@@ -1423,9 +1306,6 @@
             .then(result => {
                 if (result.ok) {
                     console.log("Уведомление отправлено!");
-                    // Помечаем пользователя как уведомленного
-                    user.notified = true;
-                    saveUserData(user);
                 } else {
                     console.error('Ошибка отправки:', result);
                 }
@@ -1435,77 +1315,12 @@
             });
         }
 
-        // Рендер скинов
-        function renderSkins() {
-            skinsGrid.innerHTML = '';
-            skins.forEach(skin => {
-                const skinCard = document.createElement('div');
-                skinCard.className = 'skin-card';
-                skinCard.innerHTML = `
-                    <div class="skin-image">
-                        <i class="fas ${skin.icon}"></i>
-                    </div>
-                    <div class="skin-info">
-                        <div class="skin-name">${skin.name}</div>
-                        <div class="skin-desc">${skin.desc}</div>
-                        <div class="skin-meta">
-                            <div class="skin-price">${skin.price} <i class="fas fa-coins"></i></div>
-                            <div class="skin-owner">@${skin.owner}</div>
-                        </div>
-                    </div>
-                `;
-                skinCard.addEventListener('click', () => showSkinDetail(skin));
-                skinsGrid.appendChild(skinCard);
-            });
-        }
-
-        // Показать детали скина
-        function showSkinDetail(skin) {
-            catalogSection.style.display = 'none';
-            skinDetail.style.display = 'block';
-            
-            detailSkinName.textContent = skin.name;
-            detailSkinDesc.textContent = skin.desc;
-            detailSkinPrice.innerHTML = `${skin.price} <i class="fas fa-coins"></i>`;
-            detailSkinOwner.textContent = `@${skin.owner}`;
-            
-            const skinImage = document.querySelector('.skin-detail-image i');
-            skinImage.className = `fas ${skin.icon}`;
-        }
-
-        // Настройка табов админ-панели
-        function setupAdminTabs() {
-            const tabs = document.querySelectorAll('.admin-tab');
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    // Убрать активный класс у всех табов
-                    tabs.forEach(t => t.classList.remove('active'));
-                    // Добавить активный класс текущему табу
-                    tab.classList.add('active');
-                    
-                    // Скрыть все контенты
-                    document.querySelectorAll('.admin-tab-content').forEach(content => {
-                        content.style.display = 'none';
-                    });
-                    
-                    // Показать нужный контент
-                    const tabId = tab.getAttribute('data-tab');
-                    document.getElementById(`${tabId}Tab`).style.display = 'block';
-                    
-                    // Загрузить данные при необходимости
-                    if (tabId === 'users') loadUsersTable();
-                    if (tabId === 'skins') loadSkinsTable();
-                    if (tabId === 'stats') loadStats();
-                });
-            });
-        }
-        
-        // Загрузка данных пользователей в таблицу
-        function loadUsersTable() {
-            const users = getAllUsers();
+        // ===== Админ-функции ===== //
+        async function loadUsersTable() {
+            const users = await getAllUsers();
             usersTableBody.innerHTML = '';
             
-            Object.values(users).forEach(user => {
+            users.forEach(user => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${user.id.substring(0, 10)}...</td>
@@ -1535,13 +1350,17 @@
             document.querySelectorAll('.action-btn.delete').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const userId = btn.getAttribute('data-userid');
-                    deleteUser(userId);
+                    if (confirm(`Удалить пользователя ${userId}?`)) {
+                        // Реализуйте удаление в GAS при необходимости
+                        alert('Функция удаления должна быть реализована в Google Apps Script');
+                        loadUsersTable();
+                    }
                 });
             });
         }
-        
-        // Загрузка данных скинов в таблицу
-        function loadSkinsTable() {
+
+        async function loadSkinsTable() {
+            skins = await getSkins();
             skinsTableBody.innerHTML = '';
             
             skins.forEach(skin => {
@@ -1574,21 +1393,23 @@
             document.querySelectorAll('.action-btn.delete[data-skinid]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const skinId = parseInt(btn.getAttribute('data-skinid'));
-                    deleteSkin(skinId);
+                    if (confirm(`Удалить скин?`)) {
+                        deleteSkin(skinId);
+                        setTimeout(loadSkinsTable, 500);
+                    }
                 });
             });
         }
-        
-        // Загрузка статистики
-        function loadStats() {
-            const users = getAllUsers();
-            const userCount = Object.keys(users).length;
+
+        async function loadStats() {
+            const users = await getAllUsers();
+            const userCount = users.length;
             
             let totalBal = 0;
             let todayCount = 0;
             const today = new Date().toDateString();
             
-            Object.values(users).forEach(user => {
+            users.forEach(user => {
                 totalBal += user.balance;
                 if (new Date(user.created).toDateString() === today) {
                     todayCount++;
@@ -1600,14 +1421,12 @@
             totalBalance.textContent = totalBal;
             newToday.textContent = todayCount;
         }
-        
-        // Редактирование пользователя
-        function editUser(userId) {
-            const users = getAllUsers();
-            const user = users[userId];
+
+        async function editUser(userId) {
+            const user = await getUserData(userId);
             
             if (user) {
-                document.getElementById('editUserId').value = userId;
+                document.getElementById('editUserId').value = user.id;
                 document.getElementById('editUsername').value = user.username || '';
                 document.getElementById('editFirstName').value = user.first_name || '';
                 document.getElementById('editLastName').value = user.last_name || '';
@@ -1616,9 +1435,8 @@
                 editUserModal.style.display = 'flex';
             }
         }
-        
-        // Редактирование скина
-        function editSkin(skinId) {
+
+        async function editSkin(skinId) {
             const skin = skins.find(s => s.id === skinId);
             
             if (skin) {
@@ -1632,31 +1450,8 @@
                 editSkinModal.style.display = 'flex';
             }
         }
-        
-        // Удаление пользователя
-        function deleteUser(userId) {
-            if (confirm(`Удалить пользователя ${userId}?`)) {
-                const users = getAllUsers();
-                delete users[userId];
-                localStorage.setItem('skinrent_users', JSON.stringify(users));
-                loadUsersTable();
-                alert('Пользователь удален');
-            }
-        }
-        
-        // Удаление скина
-        function deleteSkin(skinId) {
-            if (confirm(`Удалить скин?`)) {
-                skins = skins.filter(s => s.id !== skinId);
-                saveSkins();
-                loadSkinsTable();
-                renderSkins();
-                alert('Скин удален');
-            }
-        }
-        
-        // Добавление нового скина
-        function addNewSkin() {
+
+        async function addNewSkin() {
             const newId = Math.max(...skins.map(s => s.id), 0) + 1;
             const newSkin = {
                 id: newId,
@@ -1667,13 +1462,111 @@
                 icon: "fa-gun"
             };
             
-            skins.push(newSkin);
-            saveSkins();
+            await saveSkin(newSkin);
+            skins = await getSkins();
             loadSkinsTable();
             renderSkins();
         }
 
-        // Обработчики событий
+        // ===== Инициализация приложения ===== //
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Инициализация TWA
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            tg.enableClosingConfirmation();
+            
+            // Адаптация для мобильных
+            if (tg.isExpanded || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+                document.body.classList.add('mobile');
+                
+                // Упрощаем кнопки навигации
+                const navButtons = document.querySelectorAll('.nav-btn');
+                navButtons.forEach(btn => {
+                    const icon = btn.querySelector('i').className;
+                    btn.innerHTML = `<i class="${icon}"></i>`;
+                    btn.style.padding = '12px 15px';
+                });
+            }
+            
+            // Навигация с помощью кнопки "Назад"
+            tg.BackButton.show();
+            tg.BackButton.onClick(() => {
+                if (skinDetail.style.display === 'block') {
+                    backToCatalog.click();
+                } else if (adminPanel.style.display === 'block') {
+                    backToApp.click();
+                } else {
+                    tg.close();
+                }
+            });
+            
+            // Загрузка данных пользователя Telegram
+            const user = tg.initDataUnsafe.user || {};
+            await initUserData(user);
+            
+            // Проверка прав администратора
+            if (user.id && ADMIN_USER_IDS.includes(`tg${user.id}`)) {
+                isAdmin = true;
+                adminBtn.style.display = 'flex';
+            } else {
+                adminBtn.style.display = 'none';
+            }
+            
+            // Загрузка скинов
+            await renderSkins();
+            
+            // Настройка табов админ-панели
+            setupAdminTabs();
+        });
+
+        function setupAdminTabs() {
+            const tabs = document.querySelectorAll('.admin-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Убрать активный класс у всех табов
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // Добавить активный класс текущему табу
+                    tab.classList.add('active');
+                    
+                    // Скрыть все контенты
+                    document.querySelectorAll('.admin-tab-content').forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    // Показать нужный контент
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabId}Tab`).style.display = 'block';
+                    
+                    // Загрузить данные при необходимости
+                    if (tabId === 'users') loadUsersTable();
+                    if (tabId === 'skins') loadSkinsTable();
+                    if (tabId === 'stats') loadStats();
+                });
+            });
+        }
+
+        // ===== Обработчики событий ===== //
+        const profileBtn = document.getElementById('profileBtn');
+        const rentOutBtn = document.getElementById('rentOutBtn');
+        const rentSkinBtn = document.getElementById('rentSkinBtn');
+        const helpBtn = document.getElementById('helpBtn');
+        const adminBtn = document.getElementById('adminBtn');
+        const refreshBalance = document.getElementById('refreshBalance');
+        const addFundsBtn = document.getElementById('addFundsBtn');
+        const transferBtn = document.getElementById('transferBtn');
+        const backToCatalog = document.getElementById('backToCatalog');
+        const rentNowBtn = document.getElementById('rentNowBtn');
+        const testNotifyBtn = document.getElementById('testNotifyBtn');
+        const backToApp = document.getElementById('backToApp');
+        const addSkinBtn = document.getElementById('addSkinBtn');
+        const closeHelp = document.getElementById('closeHelp');
+        const closeRentOut = document.getElementById('closeRentOut');
+        const closeAddFunds = document.getElementById('closeAddFunds');
+        const closeEditUser = document.getElementById('closeEditUser');
+        const closeEditSkin = document.getElementById('closeEditSkin');
+        const editUserForm = document.getElementById('editUserForm');
+        const editSkinForm = document.getElementById('editSkinForm');
+
         rentSkinBtn.addEventListener('click', () => {
             catalogSection.style.display = 'block';
             skinDetail.style.display = 'none';
@@ -1687,11 +1580,11 @@
             adminPanel.style.display = 'none';
         });
         
-        adminBtn.addEventListener('click', () => {
+        adminBtn.addEventListener('click', async () => {
             catalogSection.style.display = 'none';
             skinDetail.style.display = 'none';
             adminPanel.style.display = 'block';
-            loadUsersTable();
+            await loadUsersTable();
         });
         
         backToApp.addEventListener('click', () => {
@@ -1726,43 +1619,44 @@
             });
         });
 
-        rentNowBtn.addEventListener('click', () => {
+        rentNowBtn.addEventListener('click', async () => {
             const tg = window.Telegram.WebApp;
-            const user = tg.initDataUnsafe.user || {};
-            const userId = user.id ? `tg${user.id}` : "unknown";
-            
             const skinName = detailSkinName.textContent;
-            const skinPrice = skins.find(skin => skin.name === skinName).price;
+            const skin = skins.find(s => s.name === skinName);
             
-            tg.showConfirm(`Подтвердить аренду "${skinName}" за ${skinPrice} монет?`, (confirmed) => {
-                if(confirmed) {
-                    tg.HapticFeedback.notificationOccurred('success');
-                    tg.showAlert('Скин успешно арендован!');
+            if (!skin) return;
+            
+            tg.showConfirm(`Подтвердить аренду "${skin.name}" за ${skin.price} монет?`, async (confirmed) => {
+                if(confirmed && currentUser) {
+                    if (currentUser.balance < skin.price) {
+                        tg.showAlert('Недостаточно средств!');
+                        return;
+                    }
                     
                     // Обновляем баланс
-                    const currentBalance = parseInt(balanceAmount.textContent.replace(/\D/g, ''));
-                    const newBalance = currentBalance - skinPrice;
+                    const newBalance = currentUser.balance - skin.price;
+                    const success = await updateUserBalance(newBalance);
                     
-                    // Сохраняем новый баланс
-                    updateUserBalance(userId, newBalance);
-                    
-                    // Обновляем отображение
-                    balanceAmount.innerHTML = `${newBalance} <i class="fas fa-coins"></i>`;
-                    
-                    // Возвращаемся в каталог
-                    backToCatalog.click();
+                    if (success) {
+                        tg.HapticFeedback.notificationOccurred('success');
+                        tg.showAlert('Скин успешно арендован!');
+                        
+                        // Возвращаемся в каталог
+                        backToCatalog.click();
+                    } else {
+                        tg.showAlert('Ошибка при обновлении баланса');
+                    }
                 }
             });
         });
 
-        refreshBalance.addEventListener('click', () => {
-            const tg = window.Telegram.WebApp;
-            const user = tg.initDataUnsafe.user || {};
-            const userId = user.id ? `tg${user.id}` : "unknown";
+        refreshBalance.addEventListener('click', async () => {
+            if (!currentUser) return;
             
-            const userData = loadUserData(userId);
+            const userData = await getUserData(currentUser.id);
             if (userData) {
                 balanceAmount.innerHTML = `${userData.balance} <i class="fas fa-coins"></i>`;
+                const tg = window.Telegram.WebApp;
                 tg.showAlert('Актуальный баланс загружен!');
             }
         });
@@ -1796,7 +1690,7 @@
         });
         
         // Сохранение изменений пользователя
-        editUserForm.addEventListener('submit', (e) => {
+        editUserForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const userId = document.getElementById('editUserId').value;
@@ -1805,22 +1699,22 @@
             const lastName = document.getElementById('editLastName').value;
             const balance = parseInt(document.getElementById('editUserBalance').value);
             
-            const users = getAllUsers();
-            if (users[userId]) {
-                users[userId].username = username;
-                users[userId].first_name = firstName;
-                users[userId].last_name = lastName;
-                users[userId].balance = balance;
+            const user = await getUserData(userId);
+            if (user) {
+                user.username = username;
+                user.first_name = firstName;
+                user.last_name = lastName;
+                user.balance = balance;
                 
-                localStorage.setItem('skinrent_users', JSON.stringify(users));
-                loadUsersTable();
+                await saveUserData(user);
                 editUserModal.style.display = 'none';
                 alert('Данные пользователя обновлены!');
+                loadUsersTable();
             }
         });
         
         // Сохранение изменений скина
-        editSkinForm.addEventListener('submit', (e) => {
+        editSkinForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const skinId = parseInt(document.getElementById('editSkinId').value);
@@ -1830,23 +1724,21 @@
             const owner = document.getElementById('editSkinOwner').value;
             const icon = document.getElementById('editSkinIcon').value;
             
-            const skinIndex = skins.findIndex(s => s.id === skinId);
-            if (skinIndex !== -1) {
-                skins[skinIndex] = {
-                    ...skins[skinIndex],
-                    name,
-                    desc,
-                    price,
-                    owner,
-                    icon
-                };
-                
-                saveSkins();
-                loadSkinsTable();
-                renderSkins();
-                editSkinModal.style.display = 'none';
-                alert('Данные скина обновлены!');
-            }
+            const skin = {
+                id: skinId,
+                name,
+                desc,
+                price,
+                owner,
+                icon
+            };
+            
+            await saveSkin(skin);
+            skins = await getSkins();
+            editSkinModal.style.display = 'none';
+            alert('Данные скина обновлены!');
+            loadSkinsTable();
+            renderSkins();
         });
 
         // Закрытие модальных окон
