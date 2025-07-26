@@ -1128,226 +1128,241 @@
     </div>
 
     <script>
-        // ===== КОНФИГУРАЦИЯ ===== //
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxvEaI_dIo7CgalW1x_K8dKc29cArFkamxI17loVSXatll54fEgJJ5czMBK_gCnKk2E/exec'; // Замените на URL вашего Google Apps Script
-        const BOT_TOKEN = "8430011908:AAH3M6xJm_TJEmRMTumvEv0z7e2Zpb6HMHA";
-        const NOTIFY_CHAT_ID = "799316402";
-        const ADMIN_USER_IDS = ["799316402", "tg799316402"];
-        
-        // Глобальные переменные
-        let skins = [];
-        let currentUser = null;
-        let isAdmin = false;
+       // ===== КОНФИГУРАЦИЯ ===== //
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwam3d0DIRQtQXGP4C7YmD2uTJSyYVlusL_74BpuBzkBF2v8-i7ZmHgaJZOMU0xMPeB/exec'; // Замените на URL Google Apps Script
+  const BOT_TOKEN = "8430011908:AAH3M6xJm_TJEmRMTumvEv0z7e2Zpb6HMHA";
+  const NOTIFY_CHAT_ID = "799316402";
+  const ADMIN_USER_IDS = ["799316402", "tg799316402"];
+  
+  // Глобальные переменные
+  let skins = [];
+  let currentUser = null;
+  let isAdmin = false;
 
-        // ===== API-функции для работы с Google Таблицами ===== //
-        async function gasRequest(action, data = {}) {
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action, data })
-                });
-                
-                return await response.json();
-            } catch (error) {
-                console.error('API Error:', error);
-                return { error: 'Network error' };
-            }
-        }
+  // ===== Улучшенные API-функции ===== //
+  async function gasRequest(action, data = {}) {
+    try {
+      const response = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, data })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('API Error:', error);
+      return { error: error.message };
+    }
+  }
 
-        // Пользователи
-        async function getUserData(userId) {
-            const result = await gasRequest('getUser', { userId });
-            return result.error ? null : result;
-        }
+  // ===== Работа с пользователями ===== //
+  async function loadUserData(userId) {
+    const result = await gasRequest('getUser', { userId });
+    return result.error ? null : result;
+  }
 
-        async function saveUserData(user) {
-            return await gasRequest('saveUser', { user });
-        }
+  async function saveUserData(user) {
+    const result = await gasRequest('saveUser', { user });
+    return !result.error;
+  }
 
-        async function getAllUsers() {
-            const result = await gasRequest('getAllUsers');
-            return result.error ? [] : result;
-        }
+  async function getAllUsers() {
+    const result = await gasRequest('getAllUsers');
+    return result.error ? [] : result;
+  }
 
-        // Скины
-        async function getSkins() {
-            const result = await gasRequest('getSkins');
-            return result.error ? [] : result;
-        }
+  // ===== Работа со скинами ===== //
+  async function loadSkins() {
+    const result = await gasRequest('getSkins');
+    return result.error ? [] : result;
+  }
 
-        async function saveSkin(skin) {
-            return await gasRequest('saveSkin', { skin });
-        }
+  async function saveSkin(skin) {
+    const result = await gasRequest('saveSkin', { skin });
+    return result.error ? null : result.id;
+  }
 
-        async function deleteSkin(skinId) {
-            return await gasRequest('deleteSkin', { skinId });
-        }
+  async function deleteSkin(skinId) {
+    const result = await gasRequest('deleteSkin', { skinId });
+    return !result.error;
+  }
 
-        // Логирование
-        async function logAction(message) {
-            return await gasRequest('logAction', { message });
-        }
+  // ===== Основные функции ===== //
+  async function initUserData(user) {
+    const userId = user.id ? `tg${user.id}` : `anon${Date.now()}`;
+    
+    let userData = await loadUserData(userId);
+    
+    if (!userData) {
+      userData = {
+        id: userId,
+        username: user.username || "Аноним",
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        balance: 1245,
+        skins: [],
+        created: new Date().toISOString(),
+        last_visit: new Date().toISOString(),
+        notified: false
+      };
+      
+      const saveSuccess = await saveUserData(userData);
+      
+      if (saveSuccess && user.id && !userData.notified) {
+        notifyNewUser(userData);
+        userData.notified = true;
+        await saveUserData(userData);
+      }
+    } else {
+      userData.last_visit = new Date().toISOString();
+      await saveUserData(userData);
+    }
+    
+    document.querySelector('.username').textContent = userData.first_name || "Игрок";
+    balanceAmount.innerHTML = `${userData.balance} <i class="fas fa-coins"></i>`;
+    currentUser = userData;
+  }
 
-        // ===== Основные функции приложения ===== //
-        async function initUserData(user) {
-            const userId = user.id ? `tg${user.id}` : `anon${Date.now()}`;
-            
-            let userData = await getUserData(userId);
-            
-            if (!userData) {
-                userData = {
-                    id: userId,
-                    username: user.username || "Аноним",
-                    first_name: user.first_name || "",
-                    last_name: user.last_name || "",
-                    balance: 1245,
-                    skins: [],
-                    created: new Date().toISOString(),
-                    last_visit: new Date().toISOString(),
-                    notified: false
-                };
-                
-                await saveUserData(userData);
-                
-                if (user.id && !userData.notified) {
-                    notifyNewUser(userData);
-                    userData.notified = true;
-                    await saveUserData(userData);
-                }
-            } else {
-                userData.last_visit = new Date().toISOString();
-                await saveUserData(userData);
-            }
-            
-            document.querySelector('.username').textContent = userData.first_name || "Игрок";
-            balanceAmount.innerHTML = `${userData.balance} <i class="fas fa-coins"></i>`;
-            currentUser = userData;
-        }
+  async function updateUserBalance(amount) {
+    if (!currentUser) return false;
+    
+    currentUser.balance = amount;
+    return await saveUserData(currentUser);
+  }
 
-        async function updateUserBalance(amount) {
-            if (!currentUser) return false;
-            
-            currentUser.balance = amount;
-            const result = await saveUserData(currentUser);
-            
-            if (result && !result.error) {
-                balanceAmount.innerHTML = `${amount} <i class="fas fa-coins"></i>`;
-                return true;
-            }
-            return false;
-        }
+  async function renderSkins() {
+    skins = await loadSkins();
+    skinsGrid.innerHTML = '';
+    
+    skins.forEach(skin => {
+      const skinCard = document.createElement('div');
+      skinCard.className = 'skin-card';
+      skinCard.innerHTML = `
+        <div class="skin-image">
+          <i class="fas ${skin.icon}"></i>
+        </div>
+        <div class="skin-info">
+          <div class="skin-name">${skin.name}</div>
+          <div class="skin-desc">${skin.desc}</div>
+          <div class="skin-meta">
+            <div class="skin-price">${skin.price} <i class="fas fa-coins"></i></div>
+            <div class="skin-owner">@${skin.owner}</div>
+          </div>
+        </div>
+      `;
+      skinCard.addEventListener('click', () => showSkinDetail(skin));
+      skinsGrid.appendChild(skinCard);
+    });
+  }
 
-        async function renderSkins() {
-            skins = await getSkins();
-            skinsGrid.innerHTML = '';
-            
-            skins.forEach(skin => {
-                const skinCard = document.createElement('div');
-                skinCard.className = 'skin-card';
-                skinCard.innerHTML = `
-                    <div class="skin-image">
-                        <i class="fas ${skin.icon}"></i>
-                    </div>
-                    <div class="skin-info">
-                        <div class="skin-name">${skin.name}</div>
-                        <div class="skin-desc">${skin.desc}</div>
-                        <div class="skin-meta">
-                            <div class="skin-price">${skin.price} <i class="fas fa-coins"></i></div>
-                            <div class="skin-owner">@${skin.owner}</div>
-                        </div>
-                    </div>
-                `;
-                skinCard.addEventListener('click', () => showSkinDetail(skin));
-                skinsGrid.appendChild(skinCard);
-            });
-        }
-
-        function showSkinDetail(skin) {
-            catalogSection.style.display = 'none';
-            skinDetail.style.display = 'block';
-            
-            detailSkinName.textContent = skin.name;
-            detailSkinDesc.textContent = skin.desc;
-            detailSkinPrice.innerHTML = `${skin.price} <i class="fas fa-coins"></i>`;
-            detailSkinOwner.textContent = `@${skin.owner}`;
-            
-            const skinImage = document.querySelector('.skin-detail-image i');
-            skinImage.className = `fas ${skin.icon}`;
-        }
-
-        // Уведомление о новом пользователе
-        async function notifyNewUser(user) {
-            // Проверка валидности конфигурации
-            if (!BOT_TOKEN || !NOTIFY_CHAT_ID) {
-                console.error("Уведомления не настроены!");
-                return;
-            }
-            
-            // Формируем сообщение
-            const message = `🎉 *Новый пользователь в SkinRent*:
+  // ===== Уведомления ===== //
+  async function notifyNewUser(user) {
+    // Формируем сообщение
+    const message = `🎉 *Новый пользователь в SkinRent*:
 - *ID:* ${user.id}
 - *Имя:* ${user.first_name} ${user.last_name}
 - *Username:* @${user.username || "нет"}
 - *Баланс:* ${user.balance} монет
 - *Дата регистрации:* ${new Date(user.created).toLocaleString()}`;
-            
-            // Отправляем через Telegram API
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    chat_id: NOTIFY_CHAT_ID,
-                    text: message,
-                    parse_mode: 'Markdown'
-                })
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.ok) {
-                    console.log("Уведомление отправлено!");
-                } else {
-                    console.error('Ошибка отправки:', result);
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка сети:', error);
-            });
-        }
+    
+    // Отправляем через Telegram API
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          chat_id: NOTIFY_CHAT_ID,
+          text: message,
+          parse_mode: 'Markdown'
+        })
+      });
+      
+      const result = await response.json();
+      if (!result.ok) {
+        console.error('Ошибка отправки:', result);
+      }
+    } catch (error) {
+      console.error('Ошибка сети:', error);
+    }
+  }
 
-        // ===== Админ-функции ===== //
-        async function loadUsersTable() {
-            const users = await getAllUsers();
-            usersTableBody.innerHTML = '';
+  // ===== Инициализация приложения ===== //
+  document.addEventListener('DOMContentLoaded', async () => {
+    // Инициализация TWA
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.enableClosingConfirmation();
+    
+    // Адаптация для мобильных
+    if (tg.isExpanded || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      document.body.classList.add('mobile');
+      // Упрощаем кнопки навигации
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.innerHTML = `<i class="${btn.querySelector('i').className}"></i>`;
+        btn.style.padding = '12px 15px';
+      });
+    }
+    
+    // Навигация с помощью кнопки "Назад"
+    tg.BackButton.show();
+    tg.BackButton.onClick(() => {
+      if (skinDetail.style.display === 'block') backToCatalog.click();
+      else if (adminPanel.style.display === 'block') backToApp.click();
+      else tg.close();
+    });
+    
+    // Загрузка данных
+    const user = tg.initDataUnsafe.user || {};
+    await initUserData(user);
+    await renderSkins();
+    
+    // Проверка прав администратора
+    if (user.id && ADMIN_USER_IDS.includes(`tg${user.id}`)) {
+      isAdmin = true;
+      adminBtn.style.display = 'flex';
+    } else {
+      adminBtn.style.display = 'none';
+    }
+    
+    // Настройка табов админ-панели
+    setupAdminTabs();
+  });
+
+  // ===== Админ-функции ===== //
+  async function loadUsersTable() {
+    const users = await getAllUsers();
+    usersTableBody.innerHTML = '';
+    
+    users.forEach(user => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${user.id.substring(0, 10)}...</td>
+        <td>${user.first_name || 'Не указано'}</td>
+        <td>${user.balance}</td>
+        <td>${new Date(user.created).toLocaleDateString()}</td>
+        <td>
+          <button class="action-btn edit" data-userid="${user.id}">
+            <i class="fas fa-edit"></i>
+          </button>
+        </td>
+      `;
+      usersTableBody.appendChild(row);
+    });
+    
+    // Обработчики кнопок
+    document.querySelectorAll('.action-btn.edit').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const userId = btn.getAttribute('data-userid');
+        editUser(userId);
+      });
+    });
+  }
             
-            users.forEach(user => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${user.id.substring(0, 10)}...</td>
-                    <td>${user.first_name || 'Не указано'}</td>
-                    <td>${user.balance}</td>
-                    <td>${new Date(user.created).toLocaleDateString()}</td>
-                    <td>
-                        <button class="action-btn edit" data-userid="${user.id}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete" data-userid="${user.id}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                usersTableBody.appendChild(row);
-            });
-            
-            // Добавляем обработчики для кнопок
-            document.querySelectorAll('.action-btn.edit').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const userId = btn.getAttribute('data-userid');
-                    editUser(userId);
-                });
-            });
-            
-            document.querySelectorAll('.action-btn.delete').forEach(btn => {
+     document.querySelectorAll('.action-btn.delete').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const userId = btn.getAttribute('data-userid');
                     if (confirm(`Удалить пользователя ${userId}?`)) {
@@ -1357,7 +1372,8 @@
                     }
                 });
             });
-        }
+        
+
 
         async function loadSkinsTable() {
             skins = await getSkins();
