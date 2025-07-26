@@ -1129,7 +1129,7 @@
 
     <script>
        // ===== КОНФИГУРАЦИЯ ===== //
-  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwam3d0DIRQtQXGP4C7YmD2uTJSyYVlusL_74BpuBzkBF2v8-i7ZmHgaJZOMU0xMPeB/exec'; // Замените на URL Google Apps Script
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbwkPpIWd25uUa_d7x-SUq2F1zEiZZS6Cgk1fnVekIYe710l6sxMiLEMH7orrSHgN4ub/exec'; // Замените на URL Google Apps Script
   const BOT_TOKEN = "8430011908:AAH3M6xJm_TJEmRMTumvEv0z7e2Zpb6HMHA";
   const NOTIFY_CHAT_ID = "799316402";
   const ADMIN_USER_IDS = ["799316402", "tg799316402"];
@@ -1166,9 +1166,23 @@
   }
 
   async function saveUserData(user) {
-    const result = await gasRequest('saveUser', { user });
-    return !result.error;
+  try {
+    const response = await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: 'saveUser', 
+        data: { user } 
+      })
+    });
+    
+    const result = await response.json();
+    return result && result.success;
+  } catch (error) {
+    console.error('Save user error:', error);
+    return false;
   }
+}
 
   async function getAllUsers() {
     const result = await gasRequest('getAllUsers');
