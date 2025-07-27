@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 Skin Rental</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔥 CS2 SKIN RENTAL</h1>
+            <div class="user-info">
+                <div class="balance">Balance: $<span id="balance">0.00</span></div>
+                <div class="user-avatar"></div>
+            </div>
+        </header>
+
+        <section class="inventory">
+            <h2>AVAILABLE SKINS</h2>
+            <div class="skins-grid" id="skins-container">
+                <!-- Скины будут загружаться через JS -->
+            </div>
+        </section>
+
+        <div class="loader" id="loader">Loading...</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
